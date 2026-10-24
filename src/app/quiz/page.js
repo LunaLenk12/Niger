@@ -1,159 +1,70 @@
 "use client"
 
-import { useState } from "react";
-import { supabaseClient } from "../lib/supabase/client";
+import { useEffect, useState } from "react";
+import { supabaseClient } from "../lib/supabase/client"
+import {Card,CardHeader, CardTitle, CardDescription,} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays } from "lucide-react";
+import { useRouter } from "next/navigation";
 
+const Page = () => {
+  const [quiz, setQuiz] = useState([]);
+  const supabase = supabaseClient();
+  const router = useRouter()
 
+  useEffect(() => {
+    const getQuiz = async () => {
+      const response = await supabase.from("quiz").select("*");
+      console.log(response.data)
+      setQuiz(response.data);
+    };
+    getQuiz()
+  }, []);
 
-const Quizy = () => {
- const supabase = supabaseClient();
+  console.log(quiz, "hii")
 
- const [quiz , setQuiz] = useState("");
- const [questions, setQuestions] = useState([
-   {
-      question: "",
-      point: 0, 
-      answers: ["", "", "", ""],
-      correctIndex: 0 ,
-   } 
- ])
-const handleQuizName = (event) => setQuiz(event.target.value);
+  const handleRedirect = (quizId) => {
+    router.push(`/quiz2/${quizId}`)
+  }
 
-const createQuiz = async () => {
-    const response = await supabase.from("quiz").insert({
-        quizName: quiz,
-    })
-    .select("*")
-    .single();
-    const quizId = response.data.id;
+  return (
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold tracking-tight">Quizzes</h1>
+        <Badge variant="secondary">{quiz.length} total</Badge>
+      </div>
 
-    for (let i = 0 ; i < questions.length; i++) {
-       const response =  await supabase.from("quiz_questions").insert({
-            question: questions[i].question,
-            quizId: quizId,
-            point: questions[i].point,
-        })
-        .select("*");
-
-        const questionId = response.data[0].id;
-
-        for (let j = 0; j < questions[i].answers.length; j++) {
-         await supabase.from("question_answers").insert({
-            questionId: questionId,
-            answer: questions[i].answers[j],
-            isCorrect: questions[i].correctIndex === j
-         })
-        }
-        console.log(response, "question")
-    }
-}
-const handleQuestion = (value, field, questionIndex) => {
-    const updatedQuestion = questions.map((question, index) =>{
-        if (questionIndex === index) {
-            return { ...question, [field]: value};
-        }else {
-            return question;
-        } 
-    });
-
-    setQuestions(updatedQuestion);
-}
-const handleAnswers = (questionIndex, answerIndex, value) => {
-    const updatedQuestions = questions.map((question, qIndex) => {
-      if (qIndex === questionIndex) {
-        return {
-            ...question,
-            answers: question.answers.map((answer, aIndex) => {
-                if (aIndex === answerIndex) {
-                    return value;
-                } else {
-                    return answer;
-                }           
-            })
-        }
-      } else {
-        return question;
-      }
-    })
-    setQuestions(updatedQuestions);
-}
-    const addQuestion = () => {
-        setQuestions([
-            ...questions,
-            {
-            question: "",
-            point: 0, 
-             answers: ["", "", "", ""],
-            correctIndex: 0 ,    
-            }
-        ])
-    }
-return (
-    <div>
-        <input
-        placeholder="quiz name"
-        onChange={(e) => handleQuizName(e)}
-        value={quiz}
-        /> 
-        <button onClick={createQuiz}>Create Quiz</button>
-        <div>
-            {questions.map((question, questionIndex) => {
-                return (
-                 <div>
-                   <input
-                    placeholder="question..."
-                    value={question.question}
-                    onChange={(e) =>
-                        handleQuestion(e.target.value, "question", questionIndex)
-                    }
-                     />
-                     <input
-                     placeholder="point"
-                     type="number"
-                     min={0}
-                     value={question.point}
-                     onChange={(event) => 
-                        handleQuestion(
-                            Number(event.target.value),
-                            "point",
-                            questionIndex,
-                        )
-                     }
-                     />
-                     {question.answers.map((answer, answerIndex) => {
-                        return (
-                            <div>
-                                <input
-                                type="checkbox"
-                                onChange={(e) =>
-                                    handleQuestion(
-                                        answerIndex,
-                                        "correctIndex",
-                                        questionIndex,
-                                    )
-                                }
-                                />
-                                <input
-                                placeholder="answer..."
-                                value={answer}
-                                onChange={(e) =>
-                                    handleAnswers(
-                                        questionIndex,
-                                        answerIndex,
-                                        e.target.value,
-                                    )
-                                }
-                                />
-                            </div>
-                        )
-                     })}
-                 </div>
-
-                )
-            })}
+      {quiz.length === 0 ? (
+        <p className="rounded-md border border-dashed p-8 text-center text-sm text-muted-foreground">
+          Loading...
+        </p>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {quiz.map((item) => {
+            return (
+              <Card
+                key={item.id}
+                className="transition-colors hover:bg-muted/50"
+                onClick={() => handleRedirect(item.id)}
+              >
+                <CardHeader>
+                    <CardTitle className="text-base">{}</CardTitle>
+                  <CardTitle className="text-base">{item.quizName}</CardTitle>
+                  <CardDescription className="flex items-center gap-1.5">
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    {new Date(item.created_at).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            );
+          })}
         </div>
-        <button onClick={addQuestion}>add question</button>
+      )}
     </div>
-)
+  );
 }
-export default Quizy
+export default Page
