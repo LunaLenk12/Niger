@@ -5,10 +5,12 @@ import { supabaseClient } from "../lib/supabase/client"
 
 const Login = () => {
 const supabase = supabaseClient()
+const [name, setName] = useState("")
+const [password, setPassword] = useState("")
 const login = async () => {
     const response = await supabase.auth.signInWithPassword({
-        email: '',
-        password: ''
+        email: name,
+        password: password
     })
     console.log(response)
 }
