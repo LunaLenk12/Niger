@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle,CardDescription,  CardContent,  CardFooter,
 } from "@/components/ui/card"
+import { toast, ToastContainer } from "react-toastify"
 
 const Signup = () => {
   const supabase = supabaseClient()
@@ -15,11 +16,18 @@ const Signup = () => {
   const [name, setName] = useState("")
   const [password, setPassword] = useState("")
   const signup = async () => {
-    const response = await supabase.auth.signUp({
+   const { error } = await supabase.auth.signUp({
       email: name,
-      password: password
+      password: password,
     })
-    console.log(response)
+
+    if (error) {
+      toast.error("The password or the gmail is wrong")
+      return
+    }
+
+    toast.success("Logged in successfully!")
+   
   }
   const emailLogin = (event) => {
     setName(event.target.value)
@@ -33,6 +41,7 @@ const Signup = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-8">
+        <ToastContainer position="top-right" autoClose={3000} />
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl">Create an account</CardTitle>
