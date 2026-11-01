@@ -26,7 +26,7 @@ const Signup = () => {
       return
     }
 
-    toast.success("Logged in successfully!")
+    toast.success("Signed up successfully!")
    
   }
   const emailLogin = (event) => {
